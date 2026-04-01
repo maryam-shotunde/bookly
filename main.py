@@ -1,5 +1,7 @@
-from fastapi import FastAPI
+from fastapi import FastAPI,status
+from fastapi.exceptions import HTTPException
 from pydantic import BaseModel
+from typing import List
 
 app = FastAPI()
 
@@ -70,17 +72,23 @@ class Book(BaseModel):
     page_count : int
     language : str
 
-@app.get('/books', response_model=Book)
+@app.get('/books', response_model=List[Book])
 async def get_all_books():
     return books
 
-@app.post('/books')
-async def get_all_books() -> dict:
-    pass
+@app.post('/books',status_code= status.HTTP_201_CREATED)
+async def get_all_books(book_data:Book) -> dict:
+    new_book = book_data.model_dump()
+    books.append(new_book)
+    return new_book    
 
 @app.get('/book/{book_id}')
 async def get_book(book_id:int) -> dict:
-    pass
+    for book in books:
+        if book['id'] == book_id:
+            return book
+        
+    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail= 'book not found')
 
 @app.get('/book/{book_id}')
 async def update_book(book_id:int) -> dict:
